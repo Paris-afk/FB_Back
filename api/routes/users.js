@@ -32,25 +32,27 @@ const upload = multer({
   fileFilter: fileFilter,
 }); //esto basicamente lo inicia y le pasamos la ubicacion ddonde guardara
 
-const Product = require("../models/product");
+const User = require("../models/user");
 
 router.get("/", (req, res, next) => {
-  Product.find()
-    .select("name price _id productImage") //esto es para que muestro solo los datos que le estoy pidiendo
+  User.find()
+    .select("name lastName _id imgProfile password email") //esto es para que muestro solo los datos que le estoy pidiendo
     .exec()
     .then((docs) => {
       const response = {
         count: docs.length,
         // product: docs, (esta es mi manera 1 !)
-        products: docs.map((doc) => {
+        users: docs.map((doc) => {
           return {
             name: doc.name,
-            price: doc.price,
+            lastName: doc.lastName,
             _id: doc._id,
-            productImage: doc.productImage,
+            imgProfile: doc.imgProfile,
+            email: doc.email,
+            password: doc.password,
             request: {
               type: "GET",
-              url: "http://localhost:3000/producs" + doc._id,
+              url: "http://localhost:3000/users" + doc._id,
               required: "true",
             },
           };
@@ -73,25 +75,29 @@ router.get("/", (req, res, next) => {
     });
 });
 
-router.post("/", upload.single("productImage"), (req, res, next) => {
+router.post("/", upload.single("imgProfile"), (req, res, next) => {
   console.log(req.file);
-  const product = new Product({
+  const user = new User({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
-    price: req.body.price,
-    productImage: req.file.path,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    password: req.body.password,
+    imgProfile: req.file.path,
   });
-  product
+  user
     .save()
     .then((result) => {
       console.log(result);
       res.status(201).json({
-        message: "Created product succesfully",
+        message: "Created user succesfully",
         // createdProduct: result, (para evitar que solo muestre un resultado sin sentido es mejor enviar el objeto que deseamos asi que creamos el objeto)
         createdProduct: {
           name: result.name,
-          price: result.price,
+          lastName: result.lastName,
           id: result.id,
+          email: result.email,
+          password: result.password,
         },
       });
     })
@@ -103,10 +109,10 @@ router.post("/", upload.single("productImage"), (req, res, next) => {
     });
 });
 
-router.get("/:productId", (req, res, next) => {
-  const id = req.params.productId;
-  Product.findById(id)
-    .select("name price _id productImage")
+router.get("/:userId", (req, res, next) => {
+  const id = req.params.userId;
+  User.findById(id)
+    .select("name lastName email password _id imgProfile")
     .exec()
     .then((doc) => {
       console.log("From database", doc);
@@ -129,8 +135,8 @@ router.get("/:productId", (req, res, next) => {
     });
 });
 
-router.patch("/:productId", (req, res, next) => {
-  const id = req.params.productId;
+router.patch("/:userId", (req, res, next) => {
+  const id = req.params.userId;
   const updateOps = {};
   for (const ops of req.body) {
     updateOps[ops.propName] = ops.value;
@@ -142,10 +148,10 @@ router.patch("/:productId", (req, res, next) => {
       // console.log(result);
       // res.status(200).json(result);
       res.status(200).json({
-        message: "Product updated",
+        message: "User updated",
         request: {
           type: "GET",
-          url: "http//localhost:3000/products" + id,
+          url: "http//localhost:3000/users" + id,
         },
       });
     })
@@ -157,17 +163,17 @@ router.patch("/:productId", (req, res, next) => {
     });
 });
 
-router.delete("/:productId", (req, res, next) => {
-  const id = req.params.productId;
+router.delete("/:userId", (req, res, next) => {
+  const id = req.params.userId;
   Product.remove({ _id: id })
     .exec()
     .then((result) => {
       res.status(200).json({
-        message: "Product deleted",
+        message: "user deleted",
         request: {
           type: "POST",
-          url: "http://localhost:300/products",
-          body: { name: "String", price: "Number" },
+          url: "http://localhost:300/users",
+          body: { name: "String" },
         },
       });
     })
